@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, use } from "react";
+import axios from "axios";
 
 const BASE_URL = 'https://69e5f0f0ce4e908a155eb195.mockapi.io';
 
@@ -11,45 +12,38 @@ export default function Page({ params }) {
   const [Blogname, setNewName] = useState("");
 
   async function fetchBlog() {
-      const res = await fetch(`${BASE_URL}/blogs/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setBlog(data);
-        setNewName(data.name);
-      }
+    try {
+      const res = await axios.get(`${BASE_URL}/blogs/${id}`);
+      setBlog(res.data);
+      setNewName(res.data.name);
+    } catch (err) {
+      console.error("Fetch Error:", err);
+    } finally {
       setLoading(false);
     }
-    
+  }
+
   useEffect(() => {
     fetchBlog();
   }, [id]);
 
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${BASE_URL}/blogs/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: Blogname,
-          description: blog.description
-        })
+      const res = await axios.put(`${BASE_URL}/blogs/${id}`, {
+        name: Blogname,
+        description: blog.description
       });
 
-      if (res.ok) {
+      if (res.status === 200) {
         alert("successfully: " + Blogname);
         fetchBlog();
-      } else {
-        alert("error");
       }
     } catch (err) {
-      console.error("Error:", err);
-      alert("error502");
+      console.error("Update Error:", err);
+      alert("Fali");
     }
   };
-
 
   if (loading) return <div>Loading...</div>;
   if (!blog) return <div>404 Blog</div>;
@@ -73,10 +67,11 @@ export default function Page({ params }) {
             type="text" 
             value={Blogname} 
             onChange={(e) => setNewName(e.target.value)} 
-            placeholder="พิมพ์ชื่อใหม่ที่นี่"
+            placeholder="new name"
+            className="border p-1"
           />
         </div>
-        <button type="submit" className="px-4 bg-gray-600">Submit</button>
+        <button type="submit" className="px-4 bg-gray-600 text-white mt-2">Submit</button>
       </form>
     </>
   );
